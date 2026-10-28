@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SiasaData WebAR - Political Parties</title>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+
+  <!-- UI Overlay for Dynamic Screen Text -->
+  <div id="ui-container" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; background: rgba(0,0,0,0.85); color: white; padding: 15px 25px; font-family: sans-serif; border-radius: 8px; font-size: 15px; text-align: left; max-width: 85%; width: 320px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+    <b style="color: #4CAF50; font-size: 17px;">SiasaData AR Viewer</b><br>Point your camera at a political party marker.
+  </div>
+
+  <!-- AR Scene configured for multiple targets -->
+  <a-scene mindar-image="imageTargetSrc: YOUR_COMPILED_TARGETS.mind;" 
+           color-space="sRGB" 
+           renderer="colorManagement: true, physicallyCorrectLights" 
+           vr-mode-ui="enabled: false" 
+           device-orientation-permission-ui="enabled: false">
+    
+    <a-assets>
+      <video id="ar-video" crossorigin="anonymous" loop playsinline></video>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- Target 0: Maps to PLP -->
+    <a-entity id="target-0" mindar-image-target="targetIndex: 0">
+      <a-plane position="0 0 0" width="1" height="0.55" material="color: white; opacity: 0.1;"></a-plane>
+    </a-entity>
+
+    <!-- Target 1: Maps to ODM -->
+    <a-entity id="target-1" mindar-image-target="targetIndex: 1">
+      <a-plane position="0 0 0" width="1" height="0.55" material="color: white; opacity: 0.1;"></a-plane>
+    </a-entity>
+
+    <!-- Target 2: Maps to UDA -->
+    <a-entity id="target-2" mindar-image-target="targetIndex: 2">
+      <a-plane position="0 0 0" width="1" height="0.55" material="color: white; opacity: 0.1;"></a-plane>
+    </a-entity>
+    
+  </a-scene>
+
+  <!-- JavaScript Port of your PartiesDetails Dictionary -->
+  <script>
+    // Converted from your C# PartiesDetails.Parties dictionary
+    const partiesDatabase = {
+      0: {
+        code: "PLP",
+        partyName: "People's Liberation Party Kenya",
+        phoneNumber: "N/A",
+        website: "https://plpkenya.com/",
+        manifesto: "https://youtube.com/shorts/ztxsSZty8tk?feature=share", // Default fallback if needed
+        email: "N/A"
+      },
+      1: {
+        code: "ODM",
+        partyName: "Orange Democratic Movement",
+        phoneNumber: "N/A",
+        website: "https://odm.co.ke/",
+        manifesto: "https://www.w3schools.com/html/mov_bbb.mp4", // Direct MP4 stream sample for AR video plane
+        email: "N/A"
+      },
+      2: {
+        code: "UDA",
+        partyName: "United Democratic Alliance",
+        phoneNumber: "020 2020405",
+        website: "https://uda.ke/",
+        manifesto: "https://www.w3schools.com/html/movie.mp4",
+        email: "N/A"
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const uiContainer = document.querySelector("#ui-container");
+      const videoElement = document.querySelector("#ar-video");
+
+      // Loop through the mapped targets (Index 0, 1, 2)
+      Object.keys(partiesDatabase).forEach(index => {
+        const targetEntity = document.querySelector(`#target-${index}`);
+        const party = partiesDatabase[index];
+
+        if (targetEntity) {
+          targetEntity.addEventListener("targetFound", () => {
+            // Update UI with party particulars
+            uiContainer.innerHTML = `
+              <b style="color: #FFC107; font-size: 16px;">${party.partyName} (${party.code})</b><br>
+              <hr style="border:0; border-top:1px solid #444; margin:5px 0;">
+              📞 Phone: ${party.phoneNumber}<br>
+              🌐 Web: <a href="${party.website}" target="_blank" style="color: #4fc3f7;">Visit Site</a><br>
+              ✉️ Email: ${party.email}
+            `;
+            
+            // Set and play video source
+            if (videoElement.src !== party.manifesto) {
+              videoElement.src = party.manifesto;
+              videoElement.load();
+            }
+            videoElement.play().catch(e => console.log("Autoplay prevented:", e));
+          });
+
+          targetEntity.addEventListener("targetLost", () => {
+            uiContainer.innerHTML = `<b>SiasaData AR Viewer</b><br>Marker lost. Point camera at another party target.`;
+            videoElement.pause();
+          });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
